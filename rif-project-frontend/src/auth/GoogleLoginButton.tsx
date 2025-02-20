@@ -30,6 +30,8 @@ const GoogleLoginButton: React.FC = () => {
       <GoogleLogin
         onSuccess={responseGoogle}
         onError={() => console.error("Login Failed")}
+        shape="pill" 
+        size="large"
       />
     </GoogleOAuthProvider>
   );
