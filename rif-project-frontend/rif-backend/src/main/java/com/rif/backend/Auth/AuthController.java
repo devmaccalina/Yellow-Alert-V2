@@ -1,6 +1,7 @@
 package com.rif.backend.Auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,6 +9,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import org.springframework.beans.factory.annotation.Value;
+
+
+
 
 import com.rif.backend.Payload.JwtResponse;
 import com.rif.backend.Payload.MessageResponse;
@@ -21,14 +32,25 @@ import javax.validation.Valid;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
+
+
+
 
 @CrossOrigin(origins = "${cors.urls}", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    @Value("${google.client.id}")
+    private String googleClientId;
+
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -52,6 +74,39 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+
+    @PostMapping("/google-login")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String idTokenString = body.get("idToken");
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance())
+                .setAudience(Collections.singletonList(googleClientId))
+                .build();
+
+                GoogleIdToken idToken;
+        try {
+            idToken = verifier.verify(idTokenString);
+        } catch (GeneralSecurityException | IOException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid ID token");
+        }
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+
+            // Check if the email domain is "ust.edu.ph"
+            if (!email.endsWith("@ust.edu.ph")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }
+
+            // Create or update user in your database
+            // Assign default role as "USER"
+            // If email is "example@ust.edu.ph", assign "ADMIN" role
+
+            return ResponseEntity.ok("Login successful");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid ID token");
+        }
+    }
+
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
