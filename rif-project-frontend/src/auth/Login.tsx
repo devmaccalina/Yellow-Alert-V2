@@ -45,11 +45,11 @@ const Login = () => {
   
     <section className="flex flex-col justify-center backdrop-blur-lg bg-white/10 shadow-lg rounded-2xl px-8 py-10 max-w-md w-full h-[400px] text-left border-t-[10px] border-yellow-400">
       <h1 className="text-xl md:text-4xl font-bold text-yellow-400 mb-8">
-        Sign in
+        Sign In
       </h1>
 
       <p className="text-md md:text-l font-semibold text-white text-left mb-8">
-        To access YellowAlert, please make sure you sign in using your UST Google Workspace Personal Account.
+        To access YellowAlert, please make sure you sign in using your personal UST Google Workspace Account.
       </p>
 
       <div className="mt-6">
